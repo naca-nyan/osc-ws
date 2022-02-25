@@ -1,12 +1,38 @@
 <script setup lang="ts">
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
-import HelloWorld from './components/HelloWorld.vue'
+import { ref } from "vue";
+
+const serverAddr = ref("ws://");
+const parameter = ref("/avatar/parameters/hoge");
+const value = ref("1");
+const type = ref("Int");
+
+function send() {
+  const vrchat_proxy = "http://localhost:9000";
+  const headers = { "Content-Type": "application/json" };
+  const body = JSON.stringify({
+    path: parameter.value,
+    value: value.value,
+    type: type.value,
+  });
+  fetch(vrchat_proxy, { method: "POST", headers, body });
+}
 </script>
 
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
+  <main>
+    <h1>OSC Sharing for VRChat</h1>
+    <label for="parameter">parameter</label>
+    <input v-model="parameter" />
+    <label for="type">type</label>
+    <select name="type" id="type" v-model="type">
+      <option>Int</option>
+      <option>Bool</option>
+      <option>Float</option>
+    </select>
+    <label for="value">value</label>
+    <input v-model="value" />
+    <button @click="send">send</button>
+  </main>
 </template>
 
 <style>
