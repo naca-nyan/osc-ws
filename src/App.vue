@@ -1,26 +1,25 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { invoke } from '@tauri-apps/api/tauri'
 
 const serverAddr = ref("ws://");
 const parameter = ref("/avatar/parameters/hoge");
 const value = ref("1");
 const type = ref("Int");
 
-function send() {
-  const vrchat_proxy = "http://localhost:9000";
-  const headers = { "Content-Type": "application/json" };
-  const body = JSON.stringify({
-    path: parameter.value,
+async function send() {
+  const body = {
+    addr: parameter.value,
     value: value.value,
-    type: type.value,
-  });
-  fetch(vrchat_proxy, { method: "POST", headers, body });
+    typ: type.value,
+  };
+  await invoke("send_osc_message", body);
 }
 </script>
 
 <template>
   <main>
-    <h1>OSC Sharing for VRChat</h1>
+    <h1>OSC for VRChat</h1>
     <label for="parameter">parameter</label>
     <input v-model="parameter" />
     <label for="type">type</label>
@@ -31,7 +30,7 @@ function send() {
     </select>
     <label for="value">value</label>
     <input v-model="value" />
-    <button @click="send">send</button>
+    <button @click="send()">send</button>
   </main>
 </template>
 
