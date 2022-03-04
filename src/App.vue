@@ -9,6 +9,8 @@ const type = ref("Int");
 
 const state: { [key: string]: any } = ref({});
 
+const isDebug = ref(false);
+
 async function send() {
   const body = {
     addr: parameter.value,
@@ -19,13 +21,16 @@ async function send() {
 }
 
 async function recieveLoop() {
-  while (true) {
+  while (isDebug.value) {
     const [key, value] = await invoke("receive");
     state.value[key] = value;
   }
 }
 
-recieveLoop();
+function toggleDebug() {
+  isDebug.value = !isDebug.value;
+  if (isDebug.value) recieveLoop();
+}
 </script>
 
 <template>
@@ -42,7 +47,10 @@ recieveLoop();
     <label for="value">value</label>
     <input v-model="value" />
     <button @click="send()">send</button>
-    <table>
+    <button @click="toggleDebug()">
+      {{ isDebug ? "disable" : "enable" }} Debug
+    </button>
+    <table v-if="isDebug">
       <tr v-for="(value, key) in state">
         <td>{{ key }}</td>
         <td>{{ value }}</td>
@@ -54,6 +62,10 @@ recieveLoop();
 <style>
 #app {
   margin-top: 60px;
+}
+
+table {
+  background-color: #24292f;
 }
 
 table td {
