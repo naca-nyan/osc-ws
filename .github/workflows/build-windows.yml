@@ -1,0 +1,22 @@
+name: Build binary for Windows
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: yarn --frozen-lockfile
+      - run: yarn tauri build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: binary-windows
+          path: src-tauri/target/release/osc-ws.exe
