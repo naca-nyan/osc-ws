@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke } from "@tauri-apps/api/tauri";
 
 const serverAddr = ref("ws://");
 const parameter = ref("/avatar/parameters/hoge");
 const value = ref("1");
 const type = ref("Int");
+
+const state: { [key: string]: any } = ref({});
 
 async function send() {
   const body = {
@@ -15,6 +17,15 @@ async function send() {
   };
   await invoke("send_osc_message", body);
 }
+
+async function recieveLoop() {
+  while (true) {
+    const [key, value] = await invoke("receive");
+    state.value[key] = value;
+  }
+}
+
+recieveLoop();
 </script>
 
 <template>
@@ -31,11 +42,21 @@ async function send() {
     <label for="value">value</label>
     <input v-model="value" />
     <button @click="send()">send</button>
+    <table>
+      <tr v-for="(value, key) in state">
+        <td>{{ key }}</td>
+        <td>{{ value }}</td>
+      </tr>
+    </table>
   </main>
 </template>
 
 <style>
 #app {
   margin-top: 60px;
+}
+
+table td {
+  width: 50vh;
 }
 </style>

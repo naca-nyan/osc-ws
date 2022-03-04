@@ -5,9 +5,7 @@
 
 use rosc::{decoder, encoder};
 use rosc::{OscMessage, OscPacket, OscType};
-use std::collections::HashMap;
 use std::net::UdpSocket;
-use std::thread;
 
 #[tauri::command]
 fn send_osc_message(addr: String, value: String, typ: String) {
@@ -25,31 +23,25 @@ fn send_osc_message(addr: String, value: String, typ: String) {
     let _res = sock.send(&buf).expect("cannot send");
 }
 
-fn reciever() {
-    let mut args = HashMap::new();
+#[tauri::command]
+async fn receive() -> (String, String) {
     let socket = UdpSocket::bind("127.0.0.1:9001").expect("couldn't bind to address");
     let mut buf = [0; decoder::MTU];
-    loop {
-        println!("-----------");
-        let (len, _addr) = socket.recv_from(&mut buf).expect("Didn't receive data");
-        let filled_buf = &buf[..len];
-        let packet = decoder::decode(&filled_buf).expect("failed to decode");
-        match packet {
-            OscPacket::Message(msg) => {
-                args.insert(msg.addr, msg.args);
-            }
-            _ => {}
+    let (len, _addr) = socket.recv_from(&mut buf).expect("Didn't receive data");
+    let filled_buf = &buf[..len];
+    let packet = decoder::decode(&filled_buf).expect("failed to decode");
+    match packet {
+        OscPacket::Message(msg) => {
+            let fmt = format!("{:?}", msg.args);
+            return (msg.addr, fmt);
         }
-        for (k, v) in args.iter() {
-            println!("{}: {:?}", k, v)
-        }
-    }
+        _ => panic!(),
+    };
 }
 
 fn main() {
-    thread::spawn(reciever);
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler!(send_osc_message))
+        .invoke_handler(tauri::generate_handler![send_osc_message, receive])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
