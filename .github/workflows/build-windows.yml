@@ -25,5 +25,5 @@ jobs:
       - run: yarn tauri build
       - uses: actions/upload-artifact@v3
         with:
-          name: binary-windows
+          name: osc-ws
           path: src-tauri/target/release/osc-ws.exe
