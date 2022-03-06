@@ -2,22 +2,40 @@
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 
-const serverAddr = ref("ws://");
-const parameter = ref("/avatar/parameters/hoge");
-const value = ref("1");
-const type = ref("Int");
+type Typ = "Int" | "Bool" | "Float";
 
-const state: { [key: string]: any } = ref({});
+interface Parameter {
+  address: string;
+  typ: Typ;
+}
+
+const parameters = ref<Parameter[]>([]);
+
+const addressBase = ref("/avatar/parameters/");
+const paramDefault = "VRCEmotes";
+const parameter = ref("");
+const typ = ref("Int");
+
+function addParameter() {
+  const actualParam = parameter.value ? parameter.value : paramDefault;
+  const param = {
+    address: addressBase.value + actualParam,
+    typ: typ.value as Typ,
+  };
+  parameters.value.push(param);
+}
+
+async function send(param: Parameter, value: string) {
+  const body = { value, ...param };
+  await invoke("send_osc_message", body);
+}
 
 const isDebug = ref(false);
+const state: { [key: string]: any } = ref({});
 
-async function send() {
-  const body = {
-    addr: parameter.value,
-    value: value.value,
-    typ: type.value,
-  };
-  await invoke("send_osc_message", body);
+function toggleDebug() {
+  isDebug.value = !isDebug.value;
+  if (isDebug.value) recieveLoop();
 }
 
 async function recieveLoop() {
@@ -25,11 +43,6 @@ async function recieveLoop() {
     const [key, value] = await invoke("receive");
     state.value[key] = value;
   }
-}
-
-function toggleDebug() {
-  isDebug.value = !isDebug.value;
-  if (isDebug.value) recieveLoop();
 }
 </script>
 
@@ -40,25 +53,34 @@ function toggleDebug() {
   <main class="container">
     <div class="row">
       <div class="mt-4 col-lg-6">
-        <form>
-          <div class="mb-3">
-            <label for="parameter" class="form-label">parameter</label>
-            <input v-model="parameter" class="form-control" />
+        <div class="row">
+          <div class="col-8">
+            <label class="visually-hidden">Parameter</label>
+            <div class="input-group">
+              <input v-model="addressBase" class="input-group-text" />
+              <input
+                v-model="parameter"
+                class="form-control"
+                placeholder="VRCEmotes"
+              />
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="type" class="form-label">type</label>
-            <select name="type" id="type" v-model="type" class="form-select">
+          <div class="col-2">
+            <label for="type" class="visually-hidden">type</label>
+            <select name="type" id="type" v-model="typ" class="form-select">
               <option>Int</option>
               <option>Bool</option>
               <option>Float</option>
             </select>
           </div>
-          <div class="mb-3">
-            <label for="value" class="form-label">value</label>
-            <input v-model="value" class="form-control" />
-          </div>
-          <button @click="send()" class="btn btn-primary">Send</button>
-        </form>
+          <button @click="addParameter()" class="btn btn-primary col-2">
+            Add
+          </button>
+        </div>
+        <hr />
+        <div v-for="p in parameters" class="mb-3 mt-3">
+          {{ p }}
+        </div>
       </div>
       <div class="mt-4 col-lg-6">
         <table v-if="isDebug" class="table">
