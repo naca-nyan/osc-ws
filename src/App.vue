@@ -39,7 +39,7 @@ function toggleDebug() {
   </header>
   <main class="container">
     <div class="row">
-      <div class="mt-4 col-sm-6">
+      <div class="mt-4 col-lg-6">
         <form>
           <div class="mb-3">
             <label for="parameter" class="form-label">parameter</label>
@@ -57,10 +57,10 @@ function toggleDebug() {
             <label for="value" class="form-label">value</label>
             <input v-model="value" class="form-control" />
           </div>
-          <button @click="send()" class="btn btn-primary">send</button>
+          <button @click="send()" class="btn btn-primary">Send</button>
         </form>
       </div>
-      <div class="mt-4 col-sm-6">
+      <div class="mt-4 col-lg-6">
         <table v-if="isDebug" class="table">
           <thead>
             <tr>
@@ -76,7 +76,7 @@ function toggleDebug() {
           </tbody>
         </table>
         <button @click="toggleDebug()" class="btn btn-secondary">
-          {{ isDebug ? "disable" : "enable" }} Debug
+          {{ isDebug ? "Disable" : "Enable" }} debug mode
         </button>
       </div>
     </div>
