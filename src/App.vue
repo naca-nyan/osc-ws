@@ -99,10 +99,10 @@ async function recieveLoop() {
               </button>
             </div>
             <div v-else-if="p.typ === 'Bool'" class="btn-group">
-              <button @click="send(p, 'True')" class="btn btn-outline-primary">
+              <button @click="send(p, 'true')" class="btn btn-outline-primary">
                 True
               </button>
-              <button @click="send(p, 'False')" class="btn btn-outline-primary">
+              <button @click="send(p, 'false')" class="btn btn-outline-primary">
                 False
               </button>
             </div>

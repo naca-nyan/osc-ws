@@ -14,10 +14,24 @@ fn send_osc_message(addr: String, value: String, typ: String) {
     let vrc = "127.0.0.1:9000";
     let sock = UdpSocket::bind(localhost).expect("cannot bind localhost");
     sock.connect(vrc).expect("connection failed");
-    let value = value.parse().unwrap();
+    let arg = match typ.as_str() {
+        "Int" => {
+            let value = value.parse().unwrap();
+            OscType::Int(value)
+        }
+        "Bool" => {
+            let value = value.parse().unwrap();
+            OscType::Bool(value)
+        }
+        "Float" => {
+            let value = value.parse().unwrap();
+            OscType::Float(value)
+        }
+        _ => panic!("Type not implemented"),
+    };
     let buf = encoder::encode(&OscPacket::Message(OscMessage {
         addr: addr,
-        args: vec![OscType::Int(value)],
+        args: vec![arg],
     }))
     .expect("cannot encode");
     let _res = sock.send(&buf).expect("cannot send");
