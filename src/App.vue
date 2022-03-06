@@ -34,41 +34,55 @@ function toggleDebug() {
 </script>
 
 <template>
-  <main>
+  <header class="container-fluid p-5 bg-primary text-white text-center">
     <h1>OSC for VRChat</h1>
-    <label for="parameter">parameter</label>
-    <input v-model="parameter" />
-    <label for="type">type</label>
-    <select name="type" id="type" v-model="type">
-      <option>Int</option>
-      <option>Bool</option>
-      <option>Float</option>
-    </select>
-    <label for="value">value</label>
-    <input v-model="value" />
-    <button @click="send()">send</button>
-    <button @click="toggleDebug()">
-      {{ isDebug ? "disable" : "enable" }} Debug
-    </button>
-    <table v-if="isDebug">
-      <tr v-for="(value, key) in state">
-        <td>{{ key }}</td>
-        <td>{{ value }}</td>
-      </tr>
-    </table>
+  </header>
+  <main class="container">
+    <div class="row">
+      <div class="mt-4 col-sm-6">
+        <form>
+          <div class="mb-3">
+            <label for="parameter" class="form-label">parameter</label>
+            <input v-model="parameter" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label for="type" class="form-label">type</label>
+            <select name="type" id="type" v-model="type" class="form-select">
+              <option>Int</option>
+              <option>Bool</option>
+              <option>Float</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="value" class="form-label">value</label>
+            <input v-model="value" class="form-control" />
+          </div>
+          <button @click="send()" class="btn btn-primary">send</button>
+        </form>
+      </div>
+      <div class="mt-4 col-sm-6">
+        <table v-if="isDebug" class="table">
+          <thead>
+            <tr>
+              <th>Address</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(value, key) in state">
+              <td>{{ key }}</td>
+              <td>{{ value }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <button @click="toggleDebug()" class="btn btn-secondary">
+          {{ isDebug ? "disable" : "enable" }} Debug
+        </button>
+      </div>
+    </div>
   </main>
 </template>
 
 <style>
-#app {
-  margin-top: 60px;
-}
-
-table {
-  background-color: #24292f;
-}
-
-table td {
-  width: 50vh;
-}
+@import "bootstrap";
 </style>
