@@ -23,6 +23,8 @@ function addParameter() {
     typ: typ.value as Typ,
   };
   parameters.value.push(param);
+  const config = JSON.stringify(parameters.value, null, 2);
+  invoke("write_avatar_config", { config }).then(console.log);
 }
 
 async function send(param: Parameter, value: string) {
@@ -45,6 +47,11 @@ async function recieveLoop() {
     state.value[key] = value;
   }
 }
+invoke("read_avatar_config")
+  .then(
+    (text) => (parameters.value = JSON.parse(text as string) as Parameter[])
+  )
+  .catch((e) => console.warn(e));
 </script>
 
 <template>

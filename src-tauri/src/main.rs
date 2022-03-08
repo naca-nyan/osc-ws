@@ -53,9 +53,38 @@ async fn receive() -> (String, String) {
     };
 }
 
+const CONFIG_FILE_NAME: &str = "avatarconfig.json";
+
+#[tauri::command]
+fn read_avatar_config(app: tauri::AppHandle) -> Result<String, String> {
+    let resource_dir = app
+        .path_resolver()
+        .resource_dir()
+        .expect("couldn't get resource dir");
+    let avatar_config_path = resource_dir.join(CONFIG_FILE_NAME);
+    let contents = std::fs::read(&avatar_config_path).map_err(|e| e.to_string())?;
+    String::from_utf8(contents).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn write_avatar_config(config: String, app: tauri::AppHandle) -> Result<(), String> {
+    let resource_dir = app
+        .path_resolver()
+        .resource_dir()
+        .expect("couldn't get resource dir");
+    let avatar_config_path = resource_dir.join(CONFIG_FILE_NAME);
+    std::fs::write(&avatar_config_path, config).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![send_osc_message, receive])
+        .invoke_handler(tauri::generate_handler![
+            send_osc_message,
+            receive,
+            read_avatar_config,
+            write_avatar_config
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
