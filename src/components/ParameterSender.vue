@@ -57,10 +57,25 @@ invoke("read_avatar_config")
             False
           </button>
         </div>
-        <div v-else-if="p.typ === 'Float'" class="input-group">
-          <input type="number" value="1.0" step="0.1" class="form-control" />
-          <button class="btn btn-outline-primary col-3" disabled>
-            (not implemented)
+        <div v-else-if="p.typ === 'Float'" class="btn-group">
+          <button
+            v-for="i in [
+              '0.0',
+              '0.1',
+              '0.2',
+              '0.3',
+              '0.4',
+              '0.5',
+              '0.6',
+              '0.7',
+              '0.8',
+              '0.9',
+              '1.0',
+            ]"
+            @click="send(p, i)"
+            class="btn btn-outline-primary"
+          >
+            {{ i }}
           </button>
         </div>
       </div>
