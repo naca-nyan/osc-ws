@@ -1,18 +1,24 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { parameterTypes, ParameterType, Parameter } from "../parameter";
 
 const emit = defineEmits<{
-  (e: "add", addr: string, typ: string): void;
+  (e: "add", param: Parameter): void;
 }>();
 
 const addrBase = ref("/avatar/parameters/");
 const paramDefault = "VRCEmotes";
 const parameter = ref("");
-const typ = ref("Int");
+const typ = ref<ParameterType>(parameterTypes[0]); // "Int"
 const addr = computed(() => {
   const param = parameter.value ? parameter.value : paramDefault;
   return addrBase.value + param;
 });
+
+const param = computed(() => ({
+  addr: addr.value,
+  typ: typ.value,
+}));
 </script>
 
 <template>
@@ -24,19 +30,17 @@ const addr = computed(() => {
         <input
           v-model="parameter"
           class="form-control"
-          placeholder="VRCEmotes"
+          :placeholder="paramDefault"
         />
       </div>
     </div>
     <div class="col-2">
       <label for="type" class="visually-hidden">type</label>
       <select name="type" id="type" v-model="typ" class="form-select">
-        <option>Int</option>
-        <option>Bool</option>
-        <option>Float</option>
+        <option v-for="t in parameterTypes">{{ t }}</option>
       </select>
     </div>
-    <button @click="emit('add', addr, typ)" class="btn btn-primary col-2">
+    <button @click="emit('add', param)" class="btn btn-primary col-2">
       Add
     </button>
   </div>

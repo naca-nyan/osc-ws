@@ -1,19 +1,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
+
+import { Parameter } from "../parameter";
 import ParameterAdder from "./ParameterAdder.vue";
-
-type Typ = "Int" | "Bool" | "Float";
-
-interface Parameter {
-  addr: string;
-  typ: Typ;
-}
 
 const parameters = ref<Parameter[]>([]);
 
-function addParameter(addr: string, typ: string) {
-  parameters.value.push({ addr, typ: typ as Typ });
+function addParameter(param: Parameter) {
+  parameters.value.push(param);
   const config = JSON.stringify(parameters.value, null, 2);
   invoke("write_avatar_config", { config }).then(console.log);
 }
