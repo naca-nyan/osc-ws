@@ -9,8 +9,20 @@ const parameters = ref<Parameter[]>([]);
 
 function addParameter(param: Parameter) {
   parameters.value.push(param);
+  save();
+}
+
+function removeParameter(i: number) {
+  if (parameters.value[i] === undefined) return;
+  parameters.value = parameters.value.filter((_, j) => i !== j);
+  save();
+}
+
+function save() {
   const config = JSON.stringify(parameters.value, null, 2);
-  invoke("write_avatar_config", { config }).then(console.log);
+  invoke("write_avatar_config", { config })
+    .then(console.log)
+    .catch((e) => console.warn(e));
 }
 
 async function send(param: Parameter, value: string) {
@@ -30,7 +42,7 @@ invoke("read_avatar_config")
   <div class="mt-4 col-lg-6">
     <ParameterAdder @add="addParameter" />
     <hr />
-    <div v-for="p in parameters" class="mb-3">
+    <div v-for="(p, i) in parameters" class="mb-3">
       <div class="row mb-1">
         <div class="col form-label">
           {{ p.addr }}
@@ -38,15 +50,20 @@ invoke("read_avatar_config")
             {{ p.typ }}
           </span>
         </div>
+        <button
+          @click="removeParameter(i)"
+          class="btn-close pe-4"
+          aria-label="Remove"
+        ></button>
       </div>
       <div class="row">
         <div v-if="p.typ === 'Int'" class="btn-group">
           <button
-            v-for="i in ['0', '1', '2', '3', '4', '5', '6']"
-            @click="send(p, i)"
+            v-for="v in ['0', '1', '2', '3', '4', '5', '6']"
+            @click="send(p, v)"
             class="btn btn-outline-primary"
           >
-            {{ i }}
+            {{ v }}
           </button>
         </div>
         <div v-else-if="p.typ === 'Bool'" class="btn-group">
@@ -59,7 +76,7 @@ invoke("read_avatar_config")
         </div>
         <div v-else-if="p.typ === 'Float'" class="btn-group">
           <button
-            v-for="i in [
+            v-for="v in [
               '0.0',
               '0.1',
               '0.2',
@@ -72,10 +89,10 @@ invoke("read_avatar_config")
               '0.9',
               '1.0',
             ]"
-            @click="send(p, i)"
+            @click="send(p, v)"
             class="btn btn-outline-primary"
           >
-            {{ i }}
+            {{ v }}
           </button>
         </div>
       </div>
