@@ -25,17 +25,21 @@ function save() {
     .catch((e) => console.warn(e));
 }
 
+function load() {
+  invoke("read_avatar_config")
+    .then((text) => {
+      parameters.value = JSON.parse(text as string) as Parameter[];
+    })
+    .catch((e) => console.warn(e));
+}
+
 async function send(param: Parameter, value: string) {
   const body = { ...param, value };
   console.log(body);
   await invoke("send_osc_message", body);
 }
 
-invoke("read_avatar_config")
-  .then((text) => {
-    parameters.value = JSON.parse(text as string) as Parameter[];
-  })
-  .catch((e) => console.warn(e));
+load();
 </script>
 
 <template>
