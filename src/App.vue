@@ -15,8 +15,8 @@ class MyWebSocket {
   state: ReadyState = "CLOSED";
   onmessage: ((this: WebSocket, ev: MessageEvent) => any) | null = null;
   connect(url: string, protocols?: string) {
-    this.sock = new WebSocket(url, protocols);
     this.state = "CONNECTING";
+    this.sock = new WebSocket(url, protocols);
     this.sock.onerror = (err) => {
       addLogs(err.toString());
       this.state = "CLOSED";
@@ -29,6 +29,15 @@ class MyWebSocket {
   send(body: object) {
     if (this.sock === undefined) return;
     this.sock.send(JSON.stringify(body));
+  }
+  close() {
+    if (this.sock === undefined) return;
+    this.state = "CLOSING";
+    this.sock.close();
+    this.sock.onclose = () => {
+      this.state = "CLOSED";
+      this.sock = undefined;
+    };
   }
 }
 
@@ -87,7 +96,9 @@ serverAddr.value = "ws://localhost:5000";
           >
             Conecting...
           </button>
-          <button v-else class="btn btn-info" disabled>Connected</button>
+          <button v-else @click="sock.close()" class="btn btn-danger">
+            Disconnect
+          </button>
         </div>
       </div>
     </div>
