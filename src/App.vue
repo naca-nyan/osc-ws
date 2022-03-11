@@ -78,9 +78,6 @@ async function onsend(param: Parameter, value: string) {
     invoke("send_osc_message", body);
   }
 }
-
-//TODO: Delete this
-serverAddr.value = "ws://localhost:5000";
 </script>
 <template>
   <header class="container-fluid p-3 bg-primary text-white text-center">
