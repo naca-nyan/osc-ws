@@ -54,7 +54,7 @@
     },
     "windows": [
       {
-        "title": "OSC Sharing for VRChat",
+        "title": "Parameter Sync for VRChat",
         "width": 800,
         "height": 600,
         "resizable": true,

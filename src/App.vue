@@ -72,7 +72,7 @@ serverAddr.value = "ws://localhost:5000";
 </script>
 <template>
   <header class="container-fluid p-3 bg-primary text-white text-center">
-    <h1>OSC for VRChat</h1>
+    <h1>Parameter Sync for VRChat</h1>
     <div class="row">
       <div class="col-sm-8 m-auto mt-2">
         <label class="visually-hidden">Server Address</label>
