@@ -7,6 +7,10 @@ import ParameterAdder from "./ParameterAdder.vue";
 
 const parameters = ref<Parameter[]>([]);
 
+const emit = defineEmits<{
+  (e: "onsend", param: Parameter, value: string): void;
+}>();
+
 function addParameter(param: Parameter) {
   parameters.value.push(param);
   save();
@@ -33,10 +37,8 @@ function load() {
     .catch((e) => console.warn(e));
 }
 
-async function send(param: Parameter, value: string) {
-  const body = { ...param, value };
-  console.log(body);
-  await invoke("send_osc_message", body);
+function send(param: Parameter, value: string) {
+  emit("onsend", param, value);
 }
 
 load();

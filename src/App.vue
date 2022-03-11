@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { invoke } from "@tauri-apps/api/tauri";
 import { reactive, ref } from "vue";
 
 import ParameterReceiver from "./components/ParameterReceiver.vue";
 import ParameterSender from "./components/ParameterSender.vue";
+import { Parameter } from "./parameter";
 
 const serverAddr = ref("");
 const serverAddrDefault = "wss://";
@@ -43,8 +45,10 @@ class MyWebSocket {
 
 const sock = reactive(new MyWebSocket());
 
-sock.onmessage = (message) => {
+sock.onmessage = async (message) => {
   console.log(message);
+  const { addr, typ, value } = await JSON.parse(message.data);
+  invoke("send_osc_message", { addr, typ, value });
 };
 
 function connect() {
@@ -55,7 +59,6 @@ function connect() {
     console.error(e);
     addLogs(url ? "Invalid url: No URL supplied" : e.toString());
   }
-  console.log(sock.sock?.readyState);
 }
 
 const logs = ref<string[]>([]);
@@ -65,6 +68,15 @@ function addLogs(log: string) {
   setTimeout(() => {
     logs.value.length = 0;
   }, 2000);
+}
+
+async function onsend(param: Parameter, value: string) {
+  const body = { ...param, value };
+  if (sock.state === "OPEN") {
+    sock.send(body);
+  } else {
+    invoke("send_osc_message", body);
+  }
 }
 
 //TODO: Delete this
@@ -110,7 +122,7 @@ serverAddr.value = "ws://localhost:5000";
   </header>
   <main class="container">
     <div class="row">
-      <ParameterSender />
+      <ParameterSender @onsend="onsend" />
       <ParameterReceiver />
     </div>
   </main>
