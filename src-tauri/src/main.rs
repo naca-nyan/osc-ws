@@ -6,14 +6,39 @@
 use rosc::{decoder, encoder};
 use rosc::{OscMessage, OscPacket, OscType};
 use std::net::UdpSocket;
+use std::sync::Mutex;
+
+use tauri::State;
+
+struct OSCSender {
+    sock: UdpSocket,
+}
+
+impl OSCSender {
+    fn new() -> Self {
+        let localhost = "127.0.0.1:0";
+        let vrc = "127.0.0.1:9000";
+        let sock = UdpSocket::bind(localhost).expect("cannot bind localhost");
+        sock.connect(vrc).expect("connection failed");
+        OSCSender { sock }
+    }
+    fn send(&self, packet: &OscPacket) -> Result<usize, std::io::Error> {
+        let buf = encoder::encode(packet).expect("cannot encode");
+        let res = self.sock.send(&buf);
+        res
+    }
+}
+
+struct SendConnection(Mutex<OSCSender>);
 
 #[tauri::command]
-fn send_osc_message(addr: String, value: String, typ: String) {
+fn send_osc_message(
+    addr: String,
+    value: String,
+    typ: String,
+    connection: State<'_, SendConnection>,
+) {
     println!("{} {} {}", addr, value, typ);
-    let localhost = "127.0.0.1:0";
-    let vrc = "127.0.0.1:9000";
-    let sock = UdpSocket::bind(localhost).expect("cannot bind localhost");
-    sock.connect(vrc).expect("connection failed");
     let arg = match typ.as_str() {
         "Int" => {
             let value = value.parse().unwrap();
@@ -29,12 +54,16 @@ fn send_osc_message(addr: String, value: String, typ: String) {
         }
         _ => panic!("Type not implemented"),
     };
-    let buf = encoder::encode(&OscPacket::Message(OscMessage {
+    let packet = OscPacket::Message(OscMessage {
         addr: addr,
         args: vec![arg],
-    }))
-    .expect("cannot encode");
-    let _res = sock.send(&buf).expect("cannot send");
+    });
+    connection
+        .0
+        .lock()
+        .unwrap()
+        .send(&packet)
+        .expect("cannot send");
 }
 
 #[tauri::command]
@@ -79,6 +108,7 @@ fn write_avatar_config(config: String, app: tauri::AppHandle) -> Result<(), Stri
 
 fn main() {
     tauri::Builder::default()
+        .manage(SendConnection(Mutex::new(OSCSender::new())))
         .invoke_handler(tauri::generate_handler![
             send_osc_message,
             receive,
