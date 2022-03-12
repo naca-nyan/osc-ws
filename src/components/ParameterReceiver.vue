@@ -11,10 +11,13 @@ function toggleDebug() {
 }
 
 async function recieveLoop() {
-  while (isDebug.value) {
-    const [key, value] = await invoke("receive");
+  const states = (await invoke("get_states")) as [string, string][];
+  states.forEach(([key, value]) => {
     state.value[key] = value;
-  }
+  });
+  setTimeout(() => {
+    if (isDebug.value) recieveLoop();
+  }, 100);
 }
 </script>
 <template>

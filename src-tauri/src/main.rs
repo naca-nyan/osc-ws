@@ -5,8 +5,10 @@
 
 use rosc::{decoder, encoder};
 use rosc::{OscMessage, OscPacket, OscType};
+use std::collections::HashMap;
 use std::net::UdpSocket;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 use tauri::State;
 
@@ -29,7 +31,36 @@ impl OSCSender {
     }
 }
 
+struct OSCReceiver {
+    states: Arc<Mutex<HashMap<String, Vec<OscType>>>>,
+}
+
+impl OSCReceiver {
+    fn new() -> Self {
+        let vrc = "127.0.0.1:9001";
+        let sock = UdpSocket::bind(vrc).expect("couldn't bind to address");
+        let states = Arc::new(Mutex::new(HashMap::new()));
+        let states0 = Arc::clone(&states);
+        let receive_forever = move || loop {
+            let mut buf = [0; decoder::MTU];
+            let (len, _addr) = sock.recv_from(&mut buf).expect("Didn't receive data");
+            let filled_buf = &buf[..len];
+            let packet = decoder::decode(&filled_buf).expect("failed to decode");
+            match packet {
+                OscPacket::Message(msg) => {
+                    let args = msg.args;
+                    states0.lock().unwrap().insert(msg.addr, args);
+                }
+                _ => (),
+            };
+        };
+        thread::spawn(receive_forever);
+        OSCReceiver { states }
+    }
+}
+
 struct SendConnection(Mutex<OSCSender>);
+struct ReceiveConnection(Mutex<OSCReceiver>);
 
 #[tauri::command]
 fn send_osc_message(
@@ -67,19 +98,30 @@ fn send_osc_message(
 }
 
 #[tauri::command]
-async fn receive() -> (String, String) {
-    let socket = UdpSocket::bind("127.0.0.1:9001").expect("couldn't bind to address");
-    let mut buf = [0; decoder::MTU];
-    let (len, _addr) = socket.recv_from(&mut buf).expect("Didn't receive data");
-    let filled_buf = &buf[..len];
-    let packet = decoder::decode(&filled_buf).expect("failed to decode");
-    match packet {
-        OscPacket::Message(msg) => {
-            let fmt = format!("{:?}", msg.args);
-            return (msg.addr, fmt);
-        }
-        _ => panic!(),
-    };
+fn get_state(key: String, connection: State<'_, ReceiveConnection>) -> Option<String> {
+    connection
+        .0
+        .lock()
+        .unwrap()
+        .states
+        .lock()
+        .unwrap()
+        .get(&key)
+        .map(|x| format!("{:?}", x))
+}
+
+#[tauri::command]
+fn get_states(connection: State<'_, ReceiveConnection>) -> Vec<(String, String)> {
+    connection
+        .0
+        .lock()
+        .unwrap()
+        .states
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|(k, v)| (k.into(), format!("{:?}", v)))
+        .collect()
 }
 
 const CONFIG_FILE_NAME: &str = "avatarconfig.json";
@@ -109,9 +151,11 @@ fn write_avatar_config(config: String, app: tauri::AppHandle) -> Result<(), Stri
 fn main() {
     tauri::Builder::default()
         .manage(SendConnection(Mutex::new(OSCSender::new())))
+        .manage(ReceiveConnection(Mutex::new(OSCReceiver::new())))
         .invoke_handler(tauri::generate_handler![
             send_osc_message,
-            receive,
+            get_states,
+            get_state,
             read_avatar_config,
             write_avatar_config
         ])
