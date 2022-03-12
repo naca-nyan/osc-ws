@@ -15,9 +15,10 @@ async function recieveLoop() {
   states.forEach(([key, value]) => {
     state.value[key] = value;
   });
+  const refresh_rate = 60;
   setTimeout(() => {
     if (isDebug.value) recieveLoop();
-  }, 100);
+  }, 1000 / refresh_rate);
 }
 </script>
 <template>
