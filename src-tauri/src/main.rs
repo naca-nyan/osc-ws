@@ -71,18 +71,9 @@ fn send_osc_message(
 ) {
     println!("{} {} {}", addr, value, typ);
     let arg = match typ.as_str() {
-        "Int" => {
-            let value = value.parse().unwrap();
-            OscType::Int(value)
-        }
-        "Bool" => {
-            let value = value.parse().unwrap();
-            OscType::Bool(value)
-        }
-        "Float" => {
-            let value = value.parse().unwrap();
-            OscType::Float(value)
-        }
+        "Int" => OscType::Int(value.parse().unwrap()),
+        "Bool" => OscType::Bool(value.parse().unwrap()),
+        "Float" => OscType::Float(value.parse().unwrap()),
         _ => panic!("Type not implemented"),
     };
     let packet = OscPacket::Message(OscMessage {
@@ -110,8 +101,18 @@ fn get_state(key: String, connection: State<'_, ReceiveConnection>) -> Option<St
         .map(|x| format!("{:?}", x))
 }
 
+fn unpack_osc_message_arg(arg: &OscType) -> (String, String) {
+    match arg {
+        OscType::Int(v) => ("Int".into(), v.to_string()),
+        OscType::Bool(v) => ("Bool".into(), v.to_string()),
+        OscType::Float(v) => ("Float".into(), v.to_string()),
+        OscType::String(v) => ("String".into(), v.to_string()),
+        _ => ("Unknown".into(), "unknown".into()),
+    }
+}
+
 #[tauri::command]
-fn get_states(connection: State<'_, ReceiveConnection>) -> Vec<(String, String)> {
+fn get_states(connection: State<'_, ReceiveConnection>) -> Vec<(String, String, String)> {
     connection
         .0
         .lock()
@@ -120,7 +121,11 @@ fn get_states(connection: State<'_, ReceiveConnection>) -> Vec<(String, String)>
         .lock()
         .unwrap()
         .iter()
-        .map(|(k, v)| (k.into(), format!("{:?}", v)))
+        .map(|(k, v)| {
+            let addr = k.into();
+            let (typ, value) = unpack_osc_message_arg(&v[0]);
+            (addr, typ, value)
+        })
         .collect()
 }
 

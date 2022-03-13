@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 
 const isDebug = ref(false);
-const state: { [key: string]: any } = ref({});
+const states: { [key: string]: any } = ref({});
 
 function toggleDebug() {
   isDebug.value = !isDebug.value;
@@ -11,9 +11,9 @@ function toggleDebug() {
 }
 
 async function recieveLoop() {
-  const states = (await invoke("get_states")) as [string, string][];
-  states.forEach(([key, value]) => {
-    state.value[key] = value;
+  const receives = (await invoke("get_states")) as [string, string, string][];
+  receives.forEach(([addr, typ, value]) => {
+    states.value[addr] = [typ, value];
   });
   const refresh_rate = 60;
   setTimeout(() => {
@@ -22,23 +22,33 @@ async function recieveLoop() {
 }
 </script>
 <template>
-  <div class="mt-4 col-lg-6">
-    <table v-if="isDebug" class="table">
-      <thead>
-        <tr>
-          <th>Address</th>
-          <th>Value</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(value, key) in state">
-          <td>{{ key }}</td>
-          <td>{{ value }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="col-lg-6">
+    <div class="table-responsive">
+      <table v-if="isDebug" class="table">
+        <thead>
+          <tr>
+            <th>Address</th>
+            <th>Type</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="([typ, value], addr) in states">
+            <td>{{ addr }}</td>
+            <td>{{ typ }}</td>
+            <td>{{ value }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <button @click="toggleDebug()" class="btn btn-secondary">
-      {{ isDebug ? "Disable" : "Enable" }} debug mode
+      {{ isDebug ? "Hide" : "Show" }} parameter states
     </button>
   </div>
 </template>
+<style>
+td:last-child,
+th:last-child {
+  width: 35vw;
+}
+</style>

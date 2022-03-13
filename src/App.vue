@@ -80,7 +80,7 @@ async function onsend(param: Parameter, value: string) {
 }
 </script>
 <template>
-  <header class="container-fluid p-3 bg-primary text-white text-center">
+  <header class="container-fluid p-3 mb-4 bg-primary text-white text-center">
     <h1>Parameter Sync for VRChat</h1>
     <div class="row">
       <div class="col-sm-8 m-auto mt-2">

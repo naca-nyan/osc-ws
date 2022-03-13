@@ -45,7 +45,7 @@ load();
 </script>
 
 <template>
-  <div class="mt-4 col-lg-6">
+  <div class="col-lg-6">
     <ParameterAdder @add="addParameter" />
     <hr />
     <div v-for="(p, i) in parameters" class="mb-3">
