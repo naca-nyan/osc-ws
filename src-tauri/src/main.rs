@@ -88,19 +88,6 @@ fn send_osc_message(
         .expect("cannot send");
 }
 
-#[tauri::command]
-fn get_state(key: String, connection: State<'_, ReceiveConnection>) -> Option<String> {
-    connection
-        .0
-        .lock()
-        .unwrap()
-        .states
-        .lock()
-        .unwrap()
-        .get(&key)
-        .map(|x| format!("{:?}", x))
-}
-
 fn unpack_osc_message_arg(arg: &OscType) -> (String, String) {
     match arg {
         OscType::Int(v) => ("Int".into(), v.to_string()),
@@ -127,6 +114,19 @@ fn get_states(connection: State<'_, ReceiveConnection>) -> Vec<(String, String, 
             (addr, typ, value)
         })
         .collect()
+}
+
+#[tauri::command]
+fn get_state(key: String, connection: State<'_, ReceiveConnection>) -> Option<(String, String)> {
+    connection
+        .0
+        .lock()
+        .unwrap()
+        .states
+        .lock()
+        .unwrap()
+        .get(&key)
+        .and_then(|x| x.iter().map(unpack_osc_message_arg).next())
 }
 
 fn get_avatar_config_path<'a>(app: tauri::AppHandle) -> std::path::PathBuf {
