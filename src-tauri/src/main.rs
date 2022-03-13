@@ -124,30 +124,34 @@ fn get_states(connection: State<'_, ReceiveConnection>) -> Vec<(String, String)>
         .collect()
 }
 
-const CONFIG_FILE_NAME: &str = "avatarconfig.json";
-
-#[tauri::command]
-fn read_avatar_config(app: tauri::AppHandle) -> Result<String, String> {
+fn get_avatar_config_path<'a>(app: tauri::AppHandle) -> std::path::PathBuf {
+    let filename = "avatarconfig.json";
     let resource_dir = app
         .path_resolver()
         .resource_dir()
         .expect("couldn't get resource dir");
-    let avatar_config_path = resource_dir.join(CONFIG_FILE_NAME);
-    let contents = std::fs::read(&avatar_config_path).map_err(|e| e.to_string())?;
-    String::from_utf8(contents).map_err(|e| e.to_string())
+    let avatar_config_path = resource_dir.join(filename);
+    avatar_config_path
 }
 
 #[tauri::command]
-fn write_avatar_config(config: String, app: tauri::AppHandle) -> Result<(), String> {
-    let resource_dir = app
-        .path_resolver()
-        .resource_dir()
-        .expect("couldn't get resource dir");
-    let avatar_config_path = resource_dir.join(CONFIG_FILE_NAME);
-    std::fs::write(&avatar_config_path, config).map_err(|e| e.to_string())?;
+fn load_avatar_config(app: tauri::AppHandle) -> Result<String, String> {
+    let path = get_avatar_config_path(app);
+    let contents = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    Ok(contents)
+}
+
+#[tauri::command]
+fn save_avatar_config(config: String, app: tauri::AppHandle) -> Result<(), String> {
+    let path = get_avatar_config_path(app);
+    std::fs::write(&path, config).map_err(|e| e.to_string())?;
     Ok(())
 }
 
+#[tauri::command]
+fn read_avatar_config(_avatarid: String) -> Result<String, String> {
+    unimplemented!()
+}
 fn main() {
     tauri::Builder::default()
         .manage(SendConnection(Mutex::new(OSCSender::new())))
@@ -157,7 +161,8 @@ fn main() {
             get_states,
             get_state,
             read_avatar_config,
-            write_avatar_config
+            load_avatar_config,
+            save_avatar_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
