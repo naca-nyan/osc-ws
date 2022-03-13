@@ -78,6 +78,20 @@ async function onsend(param: Parameter, value: string) {
     invoke("send_osc_message", body);
   }
 }
+
+async function getParameters(): Promise<object> {
+  const avatar = await invoke("get_state", { key: "/avatar/change" });
+  if (!avatar) throw new Error("avatar not detected");
+  const [_typ, avatarId] = avatar as [string, string];
+  console.log(avatarId);
+  const contents = await invoke("read_avatar_config", { avatarId });
+  const json = contents as string;
+  const trim = json.trim();
+  const data = JSON.parse(trim);
+  return data;
+}
+
+getParameters().then(console.log);
 </script>
 <template>
   <header class="container-fluid p-3 mb-4 bg-primary text-white text-center">

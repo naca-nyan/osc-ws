@@ -153,10 +153,38 @@ fn save_avatar_config(config: String, app: tauri::AppHandle) -> Result<(), Strin
     Ok(())
 }
 
-#[tauri::command]
-fn read_avatar_config(_avatarid: String) -> Result<String, String> {
-    unimplemented!()
+fn get_avatar_configs() -> std::io::Result<Vec<std::path::PathBuf>> {
+    let osc_dir = dirs::home_dir()
+        .unwrap()
+        .join(r"AppData\LocalLow\VRChat\VRChat\OSC");
+    let avatars_dir = std::fs::read_dir(&osc_dir)?
+        .map(|x| x.map(|e| e.path()))
+        .next()
+        .unwrap()?
+        .join("Avatars");
+    let configs = std::fs::read_dir(&avatars_dir)?
+        .map(|x| x.map(|e| e.path()))
+        .collect::<Result<Vec<_>, std::io::Error>>()?;
+    Ok(configs)
 }
+
+#[tauri::command]
+fn read_avatar_config(avatar_id: String) -> Result<String, String> {
+    let configs = get_avatar_configs().unwrap();
+    for config in configs {
+        if config
+            .file_name()
+            .and_then(|f| f.to_str())
+            .and_then(|s| s.starts_with(&avatar_id).then(|| ()))
+            .is_some()
+        {
+            let json = std::fs::read_to_string(config).unwrap();
+            return Ok(json);
+        }
+    }
+    Err("no such file".into())
+}
+
 fn main() {
     tauri::Builder::default()
         .manage(SendConnection(Mutex::new(OSCSender::new())))
