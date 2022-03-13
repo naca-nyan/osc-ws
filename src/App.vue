@@ -18,9 +18,14 @@ class MyWebSocket {
   onmessage: ((this: WebSocket, ev: MessageEvent) => any) | null = null;
   connect(url: string, protocols?: string) {
     this.state = "CONNECTING";
-    this.sock = new WebSocket(url, protocols);
-    this.sock.onerror = (err) => {
-      addLogs(err.toString());
+    try {
+      this.sock = new WebSocket(url, protocols);
+    } catch (e: any) {
+      this.state = "CLOSED";
+      throw e;
+    }
+    this.sock.onerror = (err: Event) => {
+      addLogs("Connection failed: " + JSON.stringify(err));
       this.state = "CLOSED";
     };
     this.sock.onopen = () => {
@@ -57,7 +62,7 @@ function connect() {
     sock.connect(url);
   } catch (e: any) {
     console.error(e);
-    addLogs(url ? "Invalid url: No URL supplied" : e.toString());
+    addLogs(!url ? "Invalid url: No URL supplied" : e.toString());
   }
 }
 
@@ -67,7 +72,7 @@ function addLogs(log: string) {
   logs.value.push(log);
   setTimeout(() => {
     logs.value.length = 0;
-  }, 2000);
+  }, 3000);
 }
 
 async function onsend(param: Parameter, value: string) {
@@ -78,20 +83,6 @@ async function onsend(param: Parameter, value: string) {
     invoke("send_osc_message", body);
   }
 }
-
-async function getParameters(): Promise<object> {
-  const avatar = await invoke("get_state", { key: "/avatar/change" });
-  if (!avatar) throw new Error("avatar not detected");
-  const [_typ, avatarId] = avatar as [string, string];
-  console.log(avatarId);
-  const contents = await invoke("read_avatar_config", { avatarId });
-  const json = contents as string;
-  const trim = json.trim();
-  const data = JSON.parse(trim);
-  return data;
-}
-
-getParameters().then(console.log);
 </script>
 <template>
   <header class="container-fluid p-3 mb-4 bg-primary text-white text-center">
