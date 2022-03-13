@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { parameterTypes, ParameterType, Parameter } from "../parameter";
 
 const emit = defineEmits<{
-  (e: "add", param: Parameter): void;
+  (e: "add", param: { address: string; type: string }): void;
 }>();
 
 const addrBase = ref("/avatar/parameters/");
@@ -16,8 +16,8 @@ const addr = computed(() => {
 });
 
 const param = computed(() => ({
-  addr: addr.value,
-  typ: typ.value,
+  address: addr.value,
+  type: typ.value,
 }));
 </script>
 

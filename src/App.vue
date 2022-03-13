@@ -4,7 +4,7 @@ import { reactive, ref } from "vue";
 
 import ParameterReceiver from "./components/ParameterReceiver.vue";
 import ParameterSender from "./components/ParameterSender.vue";
-import { Parameter } from "./parameter";
+import { Parameter } from "./avatarconfig";
 
 const serverAddr = ref("");
 const serverAddrDefault = "wss://";
@@ -76,7 +76,8 @@ function addLogs(log: string) {
 }
 
 async function onsend(param: Parameter, value: string) {
-  const body = { ...param, value };
+  const { address: addr, type: typ } = param;
+  const body = { addr, typ, value };
   if (sock.state === "OPEN") {
     sock.send(body);
   } else {
