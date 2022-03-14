@@ -1,127 +1,35 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/tauri";
-import { reactive, ref } from "vue";
+import { ref } from "vue";
+import { Parameter } from "./avatarconfig";
 
 import ParameterReceiver from "./components/ParameterReceiver.vue";
 import ParameterSender from "./components/ParameterSender.vue";
-import { Parameter } from "./avatarconfig";
+import WebSocketAddressBar from "./components/WebSocketAddressBar.vue";
 
-const serverAddr = ref("");
-const serverAddrDefault = "wss://";
+// ref for WebSockerAdderssBar
+const ws = ref();
 
-const readyStates = ["CONNECTING", "OPEN", "CLOSING", "CLOSED"] as const;
-type ReadyState = typeof readyStates[number];
-
-class MyWebSocket {
-  sock?: WebSocket;
-  state: ReadyState = "CLOSED";
-  onmessage: ((this: WebSocket, ev: MessageEvent) => any) | null = null;
-  connect(url: string, protocols?: string) {
-    this.state = "CONNECTING";
-    try {
-      this.sock = new WebSocket(url, protocols);
-    } catch (e: any) {
-      this.state = "CLOSED";
-      throw e;
-    }
-    this.sock.onerror = (err: Event) => {
-      addLogs("Connection failed: " + JSON.stringify(err));
-      this.state = "CLOSED";
-    };
-    this.sock.onopen = () => {
-      this.state = "OPEN";
-    };
-    this.sock.onmessage = this.onmessage;
-  }
-  send(body: object) {
-    if (this.sock === undefined) return;
-    this.sock.send(JSON.stringify(body));
-  }
-  close() {
-    if (this.sock === undefined) return;
-    this.state = "CLOSING";
-    this.sock.close();
-    this.sock.onclose = () => {
-      this.state = "CLOSED";
-      this.sock = undefined;
-    };
-  }
-}
-
-const sock = reactive(new MyWebSocket());
-
-sock.onmessage = async (message) => {
+async function onmessage(message: MessageEvent) {
   console.log(message);
   const { addr, typ, value } = await JSON.parse(message.data);
-  invoke("send_osc_message", { addr, typ, value });
-};
-
-function connect() {
-  const url = serverAddr.value;
-  try {
-    sock.connect(url);
-  } catch (e: any) {
-    console.error(e);
-    addLogs(!url ? "Invalid url: No URL supplied" : e.toString());
-  }
-}
-
-const logs = ref<string[]>([]);
-
-function addLogs(log: string) {
-  logs.value.push(log);
-  setTimeout(() => {
-    logs.value.length = 0;
-  }, 3000);
+  await invoke("send_osc_message", { addr, typ, value });
 }
 
 async function onsend(param: Parameter, value: string) {
   const { address: addr, type: typ } = param;
   const body = { addr, typ, value };
-  if (sock.state === "OPEN") {
-    sock.send(body);
+  if (ws.value.state === "OPEN") {
+    ws.value.send(body);
   } else {
-    invoke("send_osc_message", body);
+    await invoke("send_osc_message", body);
   }
 }
 </script>
 <template>
   <header class="container-fluid p-3 mb-4 bg-primary text-white text-center">
     <h1>Parameter Sync for VRChat</h1>
-    <div class="row">
-      <div class="col-sm-8 m-auto mt-2">
-        <label class="visually-hidden">Server Address</label>
-        <div class="input-group">
-          <input
-            v-model="serverAddr"
-            class="form-control"
-            :placeholder="serverAddrDefault"
-          />
-          <button
-            v-if="sock.state === 'CLOSED'"
-            @click="connect()"
-            class="btn btn-info"
-          >
-            Connect
-          </button>
-          <button
-            v-else-if="sock.state === 'CONNECTING'"
-            class="btn btn-info"
-            disabled
-          >
-            Conecting...
-          </button>
-          <button v-else @click="sock.close()" class="btn btn-danger">
-            Disconnect
-          </button>
-        </div>
-      </div>
-    </div>
-    <div v-if="logs.length" class="mt-3">
-      <div class="alert alert-danger alert-dismissable fade show p-1 m-auto">
-        <div v-for="log in logs">{{ log }}</div>
-      </div>
-    </div>
+    <WebSocketAddressBar @onmessage="onmessage" ref="ws" />
   </header>
   <main class="container">
     <div class="row">
