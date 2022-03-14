@@ -7,6 +7,11 @@ import ParameterReceiver from "./components/ParameterReceiver.vue";
 import ParameterSender from "./components/ParameterSender.vue";
 import WebSocketAddressBar from "./components/WebSocketAddressBar.vue";
 
+const routes = ["Auto detect parameters", "Manually add parameters"] as const;
+type Routes = typeof routes[number];
+
+const route = ref<Routes>(routes[0]);
+
 // ref for WebSockerAdderssBar
 const ws = ref();
 
@@ -27,14 +32,27 @@ async function onsend(param: Parameter, value: string) {
 }
 </script>
 <template>
-  <header class="container-fluid p-3 mb-4 bg-primary text-white text-center">
+  <header class="container-fluid p-3 mb-3 bg-primary text-white text-center">
     <h1>Parameter Sync for VRChat</h1>
     <WebSocketAddressBar @onmessage="onmessage" ref="ws" />
   </header>
   <main class="container">
     <div class="row">
       <div class="col-lg-6">
-        <ParameterSender @onsend="onsend" />
+        <ul class="nav nav-tabs mb-3">
+          <li v-for="r in routes" class="nav-item">
+            <a
+              @click="route = r"
+              :class="r === route ? 'nav-link active' : 'nav-link'"
+            >
+              {{ r }}
+            </a>
+          </li>
+        </ul>
+        <div v-if="route === 'Auto detect parameters'">Auto detect mode</div>
+        <div v-if="route === 'Manually add parameters'">
+          <ParameterSender @onsend="onsend" />
+        </div>
       </div>
       <div class="col-lg-6">
         <ParameterReceiver />
