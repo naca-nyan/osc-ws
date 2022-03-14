@@ -1,53 +1,53 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 
-import { Parameter } from "../avatarconfig";
-import ParameterAdder from "./ParameterAdder.vue";
+import { AvatarParameterConfig, Parameter } from "../avatarconfig";
 
-const parameters = ref<Parameter[]>([]);
+const avatarconfig = ref<AvatarParameterConfig | null>(null);
+
+const parameters = computed(() => {
+  if (avatarconfig.value == null) return [];
+  return avatarconfig.value.parameters
+    .map((p) => p.input)
+    .filter((input): input is Parameter => input !== undefined);
+});
 
 const emit = defineEmits<{
   (e: "onsend", param: Parameter, value: string): void;
 }>();
 
-function addParameter(param: Parameter) {
-  parameters.value.push(param);
-  save();
-}
-
-function removeParameter(i: number) {
-  if (parameters.value[i] === undefined) return;
-  parameters.value = parameters.value.filter((_, j) => i !== j);
-  save();
-}
-
-function save() {
-  const config = JSON.stringify(parameters.value, null, 2);
-  invoke("save_avatar_config", { config })
-    .then(console.log)
-    .catch((e) => console.warn(e));
-}
-
-function load() {
-  invoke("load_avatar_config")
-    .then((text) => {
-      parameters.value = JSON.parse(text as string) as Parameter[];
-    })
-    .catch((e) => console.warn(e));
-}
-
 function send(param: Parameter, value: string) {
   emit("onsend", param, value);
 }
 
-load();
+async function getParameters(): Promise<object> {
+  const avatar = await invoke("get_state", { key: "/avatar/change" });
+  if (!avatar) throw new Error("avatar not detected");
+  const [_typ, avatarId] = avatar as [string, string];
+  const contents = await invoke("read_avatar_config", { avatarId });
+  const json = contents as string;
+  const trim = json.trim();
+  const data = JSON.parse(trim);
+  return data;
+}
+
+getParameters().then(
+  (data) => (avatarconfig.value = data as AvatarParameterConfig)
+);
 </script>
 
 <template>
-  <ParameterAdder @add="addParameter" />
-  <hr />
-  <div v-for="(p, i) in parameters" class="mb-3">
+  <div v-if="avatarconfig === null">
+    <div class="mt-3 text-center fst-italic">
+      Avatar config not loaded. Try reset-avatar and <a href=".">F5</a>.
+    </div>
+    <hr />
+  </div>
+  <div v-else class="text-center mb-3">
+    <h5>Avatar: {{ avatarconfig.name }}</h5>
+  </div>
+  <div v-for="p in parameters" class="mb-3">
     <div class="row mb-1">
       <div class="col form-label">
         {{ p.address }}
@@ -55,11 +55,6 @@ load();
           {{ p.type }}
         </span>
       </div>
-      <button
-        @click="removeParameter(i)"
-        class="btn-close pe-4"
-        aria-label="Remove"
-      ></button>
     </div>
     <div class="row">
       <div v-if="p.type === 'Int'" class="btn-group">

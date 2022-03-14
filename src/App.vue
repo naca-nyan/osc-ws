@@ -6,6 +6,7 @@ import { Parameter } from "./avatarconfig";
 import ParameterReceiver from "./components/ParameterReceiver.vue";
 import ParameterSender from "./components/ParameterSender.vue";
 import WebSocketAddressBar from "./components/WebSocketAddressBar.vue";
+import ParameterSenderAuto from "./components/ParameterSenderAuto.vue";
 
 const routes = ["Auto detect parameters", "Manually add parameters"] as const;
 type Routes = typeof routes[number];
@@ -49,7 +50,9 @@ async function onsend(param: Parameter, value: string) {
             </a>
           </li>
         </ul>
-        <div v-if="route === 'Auto detect parameters'">Auto detect mode</div>
+        <div v-if="route === 'Auto detect parameters'">
+          <ParameterSenderAuto @onsend="onsend" />
+        </div>
         <div v-if="route === 'Manually add parameters'">
           <ParameterSender @onsend="onsend" />
         </div>
