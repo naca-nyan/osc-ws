@@ -71,7 +71,7 @@ getParameters()
     <div v-if="avatarconfig === null">
       <ParameterAdder @add="addParameter" />
       <div class="mt-3 text-center fst-italic">
-        Avatar config not loaded. Try reset-avatar and F5.
+        Avatar config not loaded. Try reset-avatar and <a href=".">F5</a>.
       </div>
       <hr />
     </div>
