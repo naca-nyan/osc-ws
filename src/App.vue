@@ -33,8 +33,12 @@ async function onsend(param: Parameter, value: string) {
   </header>
   <main class="container">
     <div class="row">
-      <ParameterSender @onsend="onsend" />
-      <ParameterReceiver />
+      <div class="col-lg-6">
+        <ParameterSender @onsend="onsend" />
+      </div>
+      <div class="col-lg-6">
+        <ParameterReceiver />
+      </div>
     </div>
   </main>
 </template>
