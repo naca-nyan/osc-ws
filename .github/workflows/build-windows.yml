@@ -1,8 +1,8 @@
 name: Build binary for Windows
 on:
   push:
-    branches:
-      - main
+    tags:
+      - v*.*.*
 jobs:
   build:
     runs-on: windows-latest
@@ -23,7 +23,8 @@ jobs:
           toolchain: stable
       - run: yarn --frozen-lockfile
       - run: yarn tauri build
-      - uses: actions/upload-artifact@v3
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: osc-ws
-          path: src-tauri/target/release/osc-ws.exe
+          prerelease: true
+          files: src-tauri/target/release/osc-ws.exe
