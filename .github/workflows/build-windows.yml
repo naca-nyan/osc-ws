@@ -28,3 +28,27 @@ jobs:
         with:
           prerelease: true
           files: src-tauri/target/release/osc-ws.exe
+  debug-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: yarn --frozen-lockfile
+      - run: yarn tauri build --debug
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: true
+          files: src-tauri/target/debug/osc-ws.exe
