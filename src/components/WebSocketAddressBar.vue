@@ -54,6 +54,14 @@ function addLogs(log: string) {
   }, 3000);
 }
 
+function onkeydown(e: KeyboardEvent) {
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === "Enter") {
+      connect(serverAddr.value);
+    }
+  }
+}
+
 defineExpose({
   state,
   send,
@@ -67,6 +75,8 @@ defineExpose({
         <input
           v-model="serverAddr"
           class="form-control"
+          @keydown="onkeydown"
+          :disabled="state !== 'CLOSED'"
           :placeholder="serverAddrDefault"
         />
         <button
