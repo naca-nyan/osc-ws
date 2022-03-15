@@ -32,9 +32,9 @@ async function getParameters(): Promise<object> {
   return data;
 }
 
-getParameters().then(
-  (data) => (avatarconfig.value = data as AvatarParameterConfig)
-);
+getParameters()
+  .then((data) => (avatarconfig.value = data as AvatarParameterConfig))
+  .catch((e) => console.warn(e));
 </script>
 
 <template>
