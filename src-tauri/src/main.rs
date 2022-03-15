@@ -129,8 +129,8 @@ fn get_state(key: String, connection: State<'_, ReceiveConnection>) -> Option<(S
         .and_then(|x| x.iter().map(unpack_osc_message_arg).next())
 }
 
-fn get_avatar_config_path<'a>(app: tauri::AppHandle) -> std::path::PathBuf {
-    let filename = "avatarconfig.json";
+fn get_config_path(app: tauri::AppHandle) -> std::path::PathBuf {
+    let filename = "osc-ws.config.json";
     let resource_dir = app
         .path_resolver()
         .resource_dir()
@@ -140,15 +140,15 @@ fn get_avatar_config_path<'a>(app: tauri::AppHandle) -> std::path::PathBuf {
 }
 
 #[tauri::command]
-fn load_avatar_config(app: tauri::AppHandle) -> Result<String, String> {
-    let path = get_avatar_config_path(app);
+fn load_config(app: tauri::AppHandle) -> Result<String, String> {
+    let path = get_config_path(app);
     let contents = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
     Ok(contents)
 }
 
 #[tauri::command]
-fn save_avatar_config(config: String, app: tauri::AppHandle) -> Result<(), String> {
-    let path = get_avatar_config_path(app);
+fn save_config(config: String, app: tauri::AppHandle) -> Result<(), String> {
+    let path = get_config_path(app);
     std::fs::write(&path, config).map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -194,8 +194,8 @@ fn main() {
             get_states,
             get_state,
             read_avatar_config,
-            load_avatar_config,
-            save_avatar_config,
+            load_config,
+            save_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

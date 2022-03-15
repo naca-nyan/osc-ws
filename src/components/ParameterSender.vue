@@ -24,13 +24,13 @@ function removeParameter(i: number) {
 
 function save() {
   const config = JSON.stringify(parameters.value, null, 2);
-  invoke("save_avatar_config", { config })
+  invoke("save_config", { config })
     .then(console.log)
     .catch((e) => console.warn(e));
 }
 
 function load() {
-  invoke("load_avatar_config")
+  invoke("load_config")
     .then((text) => {
       parameters.value = JSON.parse(text as string) as Parameter[];
     })
