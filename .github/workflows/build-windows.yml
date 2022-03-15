@@ -47,8 +47,9 @@ jobs:
           toolchain: stable
       - run: yarn --frozen-lockfile
       - run: yarn tauri build --debug
+      - run: mv src-tauri/target/debug/osc-ws.exe src-tauri/target/debug/osc-ws.debug.exe
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
-          files: src-tauri/target/debug/osc-ws.exe
+          files: src-tauri/target/debug/osc-ws.debug.exe
