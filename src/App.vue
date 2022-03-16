@@ -5,7 +5,7 @@ import { Parameter } from "./avatarconfig";
 
 import ParameterReceiver from "./components/ParameterReceiver.vue";
 import ParameterSender from "./components/ParameterSender.vue";
-import WebSocketAddressBar from "./components/WebSocketAddressBar.vue";
+import ConnectForm from "./components/ConnectForm.vue";
 import ParameterSenderAuto from "./components/ParameterSenderAuto.vue";
 
 const routes = ["Auto detect parameters", "Manually add parameters"] as const;
@@ -35,7 +35,7 @@ async function onsend(param: Parameter, value: string) {
 <template>
   <header class="container-fluid p-3 mb-3 bg-primary text-white text-center">
     <h1>Parameter Sync for VRChat</h1>
-    <WebSocketAddressBar @onmessage="onmessage" ref="ws" />
+    <ConnectForm @onmessage="onmessage" ref="ws" />
   </header>
   <main class="container">
     <div class="row">
