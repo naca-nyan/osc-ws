@@ -71,11 +71,11 @@ function send(body: object) {
 function close() {
   if (sock == null) return;
   state.value = "CLOSING";
-  sock.close();
   sock.onclose = () => {
     state.value = "CLOSED";
     sock = null;
   };
+  sock.close();
 }
 
 const logs = ref<string[]>([]);
@@ -147,6 +147,9 @@ defineExpose({
           disabled
         >
           Conecting...
+        </button>
+        <button v-else-if="state === 'CLOSING'" class="btn btn-danger" disabled>
+          Disconnecting...
         </button>
         <button v-else @click="close()" class="btn btn-danger">
           Disconnect
