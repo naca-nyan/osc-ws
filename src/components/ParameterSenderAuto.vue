@@ -6,11 +6,17 @@ import { AvatarParameterConfig, Parameter } from "../avatarconfig";
 
 const avatarconfig = ref<AvatarParameterConfig | null>(null);
 
-const parameters = computed(() => {
-  if (avatarconfig.value == null) return [];
-  return avatarconfig.value.parameters
-    .map((p) => p.input)
-    .filter((input): input is Parameter => input !== undefined);
+type InputParameter = { name: string } & Parameter;
+
+const inputParameters = computed(() => {
+  const config = avatarconfig.value;
+  if (config == null) return [];
+  return config.parameters
+    .map((p) => ({
+      name: p.name,
+      ...p.input,
+    }))
+    .filter((p): p is InputParameter => p.type !== undefined);
 });
 
 const emit = defineEmits<{
@@ -47,10 +53,10 @@ getParameters()
   <div v-else class="text-center mb-3">
     <h5>Avatar: {{ avatarconfig.name }}</h5>
   </div>
-  <div v-for="p in parameters" class="mb-3">
+  <div v-for="p in inputParameters" class="mb-3">
     <div class="row mb-1">
       <div class="col form-label">
-        {{ p.address }}
+        {{ p.name }}
         <span class="badge rounded-pill bg-secondary text-light">
           {{ p.type }}
         </span>
