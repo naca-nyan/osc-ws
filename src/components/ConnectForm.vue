@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { invoke } from "@tauri-apps/api/tauri";
 import { ref } from "vue";
 
 const readyStates = ["CONNECTING", "OPEN", "CLOSING", "CLOSED"] as const;
@@ -14,6 +15,26 @@ const room = ref("");
 const serverAddr = ref("");
 const serverAddrDefault = "wss://";
 
+async function load() {
+  const res = await invoke("load_config");
+  const config = JSON.parse(res as string);
+  user.value = config.user ?? "";
+  room.value = config.room ?? "";
+  serverAddr.value = config.serverAddr ?? "";
+}
+
+async function save() {
+  const res = await invoke("load_config");
+  const config = JSON.parse(res as string);
+  config.user = user.value;
+  config.room = room.value;
+  config.serverAddr = serverAddr.value;
+  const json = JSON.stringify(config, null, 2);
+  await invoke("save_config", { config: json });
+}
+
+load().catch(console.warn);
+
 let sock: null | WebSocket = null;
 const state = ref<ReadyState>("CLOSED");
 function connect() {
@@ -26,7 +47,10 @@ function connect() {
     const params = new URLSearchParams({ user: user.value, room: room.value });
     url.search = params.toString();
     sock = new WebSocket(url);
-    sock.onopen = (_) => (state.value = "OPEN");
+    sock.onopen = (_) => {
+      state.value = "OPEN";
+      save();
+    };
     sock.onmessage = (message) => emit("onmessage", message);
     sock.onerror = (err) => {
       state.value = "CLOSED";

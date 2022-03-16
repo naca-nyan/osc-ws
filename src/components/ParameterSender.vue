@@ -22,26 +22,25 @@ function removeParameter(i: number) {
   save();
 }
 
-function save() {
-  const config = JSON.stringify(parameters.value, null, 2);
-  invoke("save_config", { config })
-    .then(console.log)
-    .catch((e) => console.warn(e));
+async function save() {
+  const res = await invoke("load_config").catch((_) => "{}");
+  const config = JSON.parse(res as string);
+  config.parameters = parameters.value;
+  const json = JSON.stringify(config, null, 2);
+  await invoke("save_config", { config: json });
 }
 
-function load() {
-  invoke("load_config")
-    .then((text) => {
-      parameters.value = JSON.parse(text as string) as Parameter[];
-    })
-    .catch((e) => console.warn(e));
+async function load() {
+  const res = await invoke("load_config");
+  const config = JSON.parse(res as string);
+  parameters.value = config.parameters ?? [];
 }
 
 function send(param: Parameter, value: string) {
   emit("onsend", param, value);
 }
 
-load();
+load().catch(console.warn);
 </script>
 
 <template>
