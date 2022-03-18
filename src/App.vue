@@ -2,11 +2,13 @@
 import { invoke } from "@tauri-apps/api/tauri";
 import { ref } from "vue";
 import { Parameter } from "./avatarconfig";
+import { Client } from "./client";
 
 import ParameterReceiver from "./components/ParameterReceiver.vue";
 import ParameterSender from "./components/ParameterSender.vue";
 import ConnectForm from "./components/ConnectForm.vue";
 import ParameterSenderAuto from "./components/ParameterSenderAuto.vue";
+import ClientList from "./components/ClientList.vue";
 
 const routes = ["Auto detect parameters", "Manually add parameters"] as const;
 type Routes = typeof routes[number];
@@ -16,10 +18,26 @@ const route = ref<Routes>(routes[0]);
 // ref for WebSockerAdderssBar
 const ws = ref();
 
+const clients = ref<Client[]>([]);
+
 async function onmessage(message: MessageEvent) {
-  console.log(message);
-  const { addr, typ, value } = await JSON.parse(message.data);
-  await invoke("send_osc_message", { addr, typ, value });
+  const event = JSON.parse(message.data);
+  console.log(event);
+  switch (event.event) {
+    case "updateRoom":
+      if (event.roomInfo) clients.value = event.roomInfo;
+      break;
+    case "closed":
+      clients.value = clients.value.filter((c) => c.id !== event.id);
+      break;
+    case "message":
+      await invoke("send_osc_message", event.body);
+      break;
+  }
+}
+
+function onclose() {
+  clients.value.length = 0;
 }
 
 async function onsend(param: Parameter, value: string) {
@@ -35,7 +53,7 @@ async function onsend(param: Parameter, value: string) {
 <template>
   <header class="container-fluid p-3 mb-3 bg-primary text-white text-center">
     <h1>Parameter Sync for VRChat</h1>
-    <ConnectForm @onmessage="onmessage" ref="ws" />
+    <ConnectForm @onmessage="onmessage" @onclose="onclose" ref="ws" />
   </header>
   <main class="container">
     <div class="row">
@@ -59,6 +77,11 @@ async function onsend(param: Parameter, value: string) {
       </div>
       <div class="col-lg-6">
         <ParameterReceiver />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <ClientList :clients="clients" />
       </div>
     </div>
   </main>

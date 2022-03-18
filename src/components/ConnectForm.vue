@@ -7,6 +7,7 @@ type ReadyState = typeof readyStates[number];
 
 const emit = defineEmits<{
   (e: "onmessage", message: MessageEvent<any>): void;
+  (e: "onclose"): void;
 }>();
 
 const user = ref("");
@@ -73,6 +74,7 @@ function close() {
   state.value = "CLOSING";
   sock.onclose = () => {
     state.value = "CLOSED";
+    emit("onclose");
     sock = null;
   };
   sock.close();
