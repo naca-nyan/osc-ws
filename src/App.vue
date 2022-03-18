@@ -79,7 +79,7 @@ async function onsend(param: Parameter, value: string) {
         <ParameterReceiver />
       </div>
     </div>
-    <div class="row">
+    <div class="row mt-2">
       <div class="col">
         <ClientList :clients="clients" />
       </div>
@@ -89,4 +89,5 @@ async function onsend(param: Parameter, value: string) {
 
 <style>
 @import "bootstrap";
+@import "bootstrap-icons";
 </style>
