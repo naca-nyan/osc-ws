@@ -1,31 +1,36 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, watchEffect } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 
-import { AvatarParameterConfig, Parameter } from "../avatarconfig";
-
-const avatarconfig = ref<AvatarParameterConfig | null>(null);
-
-type InputParameter = { name: string } & Parameter;
-
-const inputParameters = computed(() => {
-  const config = avatarconfig.value;
-  if (config == null) return [];
-  return config.parameters
-    .map((p) => ({
-      name: p.name,
-      ...p.input,
-    }))
-    .filter((p): p is InputParameter => p.type !== undefined);
-});
+import {
+  AvatarParameterConfig,
+  Parameter,
+  ParameterInfo,
+} from "../avatarconfig";
 
 const emit = defineEmits<{
   (e: "onsend", param: Parameter, value: string): void;
+  (e: "onchange", params: ParameterInfo[]): void;
 }>();
+
+type ParameterSync = {
+  name: string;
+  synced: boolean;
+} & Parameter;
 
 function send(param: Parameter, value: string) {
   emit("onsend", param, value);
 }
+
+const avatarconfig = ref<AvatarParameterConfig | null>(null);
+
+const parameters = ref<ParameterSync[]>([]);
+
+watchEffect(() => {
+  const synced = parameters.value.filter((p) => p.synced);
+  console.log(synced);
+  emit("onchange", synced);
+});
 
 async function getParameters(): Promise<object> {
   const avatar = await invoke("get_state", { key: "/avatar/change" });
@@ -38,9 +43,25 @@ async function getParameters(): Promise<object> {
   return data;
 }
 
-getParameters()
-  .then((data) => (avatarconfig.value = data as AvatarParameterConfig))
-  .catch((e) => console.warn(e));
+function getInitInputParameters() {
+  const config = avatarconfig.value;
+  if (config == null) return [];
+  return config.parameters
+    .map((p) => ({
+      name: p.name,
+      synced: false,
+      ...p.input,
+    }))
+    .filter((p): p is ParameterSync => p.type !== undefined);
+}
+
+function reload() {
+  getParameters()
+    .then((data) => (avatarconfig.value = data as AvatarParameterConfig))
+    .then(() => (parameters.value = getInitInputParameters()))
+    .catch((e) => console.warn(e));
+}
+reload();
 </script>
 
 <template>
@@ -53,13 +74,23 @@ getParameters()
   <div v-else class="text-center mb-3">
     <h5>Avatar: {{ avatarconfig.name }}</h5>
   </div>
-  <div v-for="p in inputParameters" class="mb-3">
+  <div v-for="p in parameters" class="mb-3">
     <div class="row mb-1">
       <div class="col form-label">
         {{ p.name }}
         <span class="badge rounded-pill bg-secondary text-light">
           {{ p.type }}
         </span>
+        <div class="float-end">
+          <div class="form-switch">
+            <label class="pe-5">Sync</label>
+            <input
+              v-model="p.synced"
+              class="form-check-input"
+              type="checkbox"
+            />
+          </div>
+        </div>
       </div>
     </div>
     <div class="row">

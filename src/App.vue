@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/tauri";
-import { ref } from "vue";
-import { Parameter } from "./avatarconfig";
+import { ref, computed, reactive } from "vue";
+import { Parameter, ParameterInfo } from "./avatarconfig";
 import { Client } from "./client";
 
 import ParameterReceiver from "./components/ParameterReceiver.vue";
@@ -10,8 +10,6 @@ import ParameterSender from "./components/ParameterSender.vue";
 import ParameterSenderAuto from "./components/ParameterSenderAuto.vue";
 import ParameterSenderManual from "./components/ParameterSenderManual.vue";
 import ClientList from "./components/ClientList.vue";
-
-const targetId = ref(0);
 
 const routes = ["Auto detect parameters", "Manually add parameters"] as const;
 type Routes = typeof routes[number] | number;
@@ -23,12 +21,14 @@ const ws = ref();
 
 const clients = ref<Client[]>([]);
 
-type ParamInfo = Parameter & { name: string };
-
-const infoMap = new Map<Number, ParamInfo[]>();
-function parametersOf(id: number): ParamInfo[] {
+const infoMapDefault = new Map<Number, ParameterInfo[]>();
+const infoMap = reactive(infoMapDefault);
+const parameters = computed<ParameterInfo[]>(() => {
+  if (typeof route.value !== "number") return [];
+  const id = route.value as number;
+  console.log(infoMap);
   return infoMap.get(id) ?? [];
-}
+});
 
 async function onmessage(message: MessageEvent) {
   const event = JSON.parse(message.data);
@@ -41,7 +41,17 @@ async function onmessage(message: MessageEvent) {
       clients.value = clients.value.filter((c) => c.id !== event.id);
       break;
     case "message":
-      await invoke("send_osc_message", event.body);
+      const { id, body } = event;
+      switch (body.on) {
+        case "sync":
+          const { params } = body;
+          infoMap.set(id, params);
+          break;
+        case "send":
+          const { param } = body;
+          await invoke("send_osc_message", param);
+          break;
+      }
       break;
   }
 }
@@ -51,13 +61,26 @@ function onclose() {
   route.value = "Auto detect parameters";
 }
 
+function onSyncedParameterChange(params: ParameterInfo[]) {
+  if (!ws.value) return;
+  if (ws.value.state !== "OPEN") return;
+  const body = {
+    on: "sync",
+    params: params,
+  };
+  ws.value.send(body);
+}
+
 async function onsend(param: Parameter, value: string) {
   const { address: addr, type: typ } = param;
-  const body = { addr, typ, value };
+  const body = {
+    on: "send",
+    param: { addr, typ, value },
+  };
   if (ws.value.state === "OPEN") {
     ws.value.send(body);
   } else {
-    await invoke("send_osc_message", body);
+    await invoke("send_osc_message", body.param);
   }
 }
 </script>
@@ -89,10 +112,13 @@ async function onsend(param: Parameter, value: string) {
           </li>
         </ul>
         <div v-if="typeof route === 'number'">
-          <ParameterSender :parameters="parametersOf(route)" @onsend="onsend" />
+          <ParameterSender :parameters="parameters" @onsend="onsend" />
         </div>
         <div v-if="route === 'Auto detect parameters'">
-          <ParameterSenderAuto @onsend="onsend" />
+          <ParameterSenderAuto
+            @onsend="onsend"
+            @onchange="onSyncedParameterChange"
+          />
         </div>
         <div v-if="route === 'Manually add parameters'">
           <ParameterSenderManual @onsend="onsend" />
