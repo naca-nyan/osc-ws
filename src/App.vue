@@ -7,10 +7,9 @@ import { Client } from "./client";
 import ParameterReceiver from "./components/ParameterReceiver.vue";
 import ConnectForm from "./components/ConnectForm.vue";
 import ParameterSender from "./components/ParameterSender.vue";
-import ParameterSenderAuto from "./components/ParameterSenderAuto.vue";
-import ParameterSenderManual from "./components/ParameterSenderManual.vue";
+import ParameterSyncSettings from "./components/ParameterSyncSettings.vue";
 
-const routes = ["Auto detect parameters", "Manually add parameters"] as const;
+const routes = ["Sync Settings"] as const;
 type Routes = typeof routes[number] | number;
 
 const route = ref<Routes>(routes[0]);
@@ -58,7 +57,7 @@ async function onmessage(message: MessageEvent) {
 
 function onclose() {
   clients.value.length = 0;
-  route.value = "Auto detect parameters";
+  route.value = routes[0];
 }
 
 function onSyncedParameterChange(params: ParameterInfo[]) {
@@ -115,16 +114,13 @@ async function onsend(param: Parameter, value: string) {
         <div v-if="typeof route === 'number'">
           <ParameterSender :parameters="parameters" @onsend="onsend" />
         </div>
-        <div v-if="route === 'Auto detect parameters'">
-          <ParameterSenderAuto
+        <div v-if="route === 'Sync Settings'">
+          <ParameterSyncSettings
             :syncedNames="syncedNames"
             @onsend="onsend"
             @onchange="onSyncedParameterChange"
             @onunmounted="(s) => (syncedNames = s)"
           />
-        </div>
-        <div v-if="route === 'Manually add parameters'">
-          <ParameterSenderManual @onsend="onsend" />
         </div>
       </div>
       <div class="col-lg-6">
