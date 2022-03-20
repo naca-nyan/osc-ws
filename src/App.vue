@@ -15,17 +15,18 @@ type Routes = typeof routes[number] | number;
 
 const route = ref<Routes>(routes[0]);
 
-// ref for WebSockerAdderssBar
+// ref for WebSocket
 const ws = ref();
 
 const clients = ref<Client[]>([]);
+
+let syncedNames: string[] = [];
 
 const infoMapDefault = new Map<Number, ParameterInfo[]>();
 const infoMap = reactive(infoMapDefault);
 const parameters = computed<ParameterInfo[]>(() => {
   if (typeof route.value !== "number") return [];
   const id = route.value as number;
-  console.log(infoMap);
   return infoMap.get(id) ?? [];
 });
 
@@ -61,6 +62,7 @@ function onclose() {
 }
 
 function onSyncedParameterChange(params: ParameterInfo[]) {
+  console.log(syncedNames);
   if (!ws.value) return;
   if (ws.value.state !== "OPEN") return;
   const body = {
@@ -115,8 +117,10 @@ async function onsend(param: Parameter, value: string) {
         </div>
         <div v-if="route === 'Auto detect parameters'">
           <ParameterSenderAuto
+            :syncedNames="syncedNames"
             @onsend="onsend"
             @onchange="onSyncedParameterChange"
+            @onunmounted="(s) => (syncedNames = s)"
           />
         </div>
         <div v-if="route === 'Manually add parameters'">

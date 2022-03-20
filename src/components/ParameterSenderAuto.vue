@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watchEffect } from "vue";
+import { onUnmounted, ref, watchEffect } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 
 import {
@@ -8,9 +8,14 @@ import {
   ParameterInfo,
 } from "../avatarconfig";
 
+const props = defineProps<{
+  syncedNames: string[];
+}>();
+
 const emit = defineEmits<{
   (e: "onsend", param: Parameter, value: string): void;
   (e: "onchange", params: ParameterInfo[]): void;
+  (e: "onunmounted", syncedNames: string[]): void;
 }>();
 
 type ParameterSync = {
@@ -32,6 +37,13 @@ watchEffect(() => {
   emit("onchange", synced);
 });
 
+onUnmounted(() => {
+  emit(
+    "onunmounted",
+    parameters.value.filter((p) => p.synced).map((p) => p.name)
+  );
+});
+
 async function getParameters(): Promise<object> {
   const avatar = await invoke("get_state", { key: "/avatar/change" });
   if (!avatar) throw new Error("avatar not detected");
@@ -46,10 +58,11 @@ async function getParameters(): Promise<object> {
 function getInitInputParameters() {
   const config = avatarconfig.value;
   if (config == null) return [];
+  console.log("prop", props.syncedNames);
   return config.parameters
     .map((p) => ({
       name: p.name,
-      synced: false,
+      synced: props.syncedNames.indexOf(p.name) > -1,
       ...p.input,
     }))
     .filter((p): p is ParameterSync => p.type !== undefined);
