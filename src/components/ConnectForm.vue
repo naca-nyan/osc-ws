@@ -25,7 +25,7 @@ async function load() {
 }
 
 async function save() {
-  const res = await invoke("load_config");
+  const res = await invoke("load_config").catch(() => "{}");
   const config = JSON.parse(res as string);
   config.user = user.value;
   config.room = room.value;
