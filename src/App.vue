@@ -9,7 +9,6 @@ import ConnectForm from "./components/ConnectForm.vue";
 import ParameterSender from "./components/ParameterSender.vue";
 import ParameterSenderAuto from "./components/ParameterSenderAuto.vue";
 import ParameterSenderManual from "./components/ParameterSenderManual.vue";
-import ClientList from "./components/ClientList.vue";
 
 const routes = ["Auto detect parameters", "Manually add parameters"] as const;
 type Routes = typeof routes[number] | number;
@@ -126,11 +125,6 @@ async function onsend(param: Parameter, value: string) {
       </div>
       <div class="col-lg-6">
         <ParameterReceiver />
-      </div>
-    </div>
-    <div class="row mt-2">
-      <div class="col">
-        <ClientList :clients="clients" />
       </div>
     </div>
   </main>
