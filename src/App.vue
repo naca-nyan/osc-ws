@@ -61,7 +61,6 @@ function onclose() {
 }
 
 function onSyncedParameterChange(params: ParameterInfo[]) {
-  console.log(syncedNames);
   if (!ws.value) return;
   if (ws.value.state !== "OPEN") return;
   const body = {

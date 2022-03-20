@@ -33,7 +33,6 @@ const parameters = ref<ParameterSync[]>([]);
 
 watchEffect(() => {
   const synced = parameters.value.filter((p) => p.synced);
-  console.log(synced);
   emit("onchange", synced);
 });
 
@@ -58,7 +57,6 @@ async function getParameters(): Promise<object> {
 function getInitInputParameters() {
   const config = avatarconfig.value;
   if (config == null) return [];
-  console.log("prop", props.syncedNames);
   return config.parameters
     .map((p) => ({
       name: p.name,
@@ -80,7 +78,8 @@ reload();
 <template>
   <div v-if="avatarconfig === null">
     <div class="mt-3 text-center fst-italic">
-      Avatar config not loaded. Try reset-avatar and <a href=".">F5</a>.
+      Avatar config not loaded. Try enable OSC and reset-avatar, then
+      <a href="#" @click.stop="reload">reload</a>.
     </div>
     <hr />
   </div>
