@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { invoke } from "@tauri-apps/api/tauri";
-import { AvatarParameterConfig, Parameter } from "../avatarconfig";
+import { Parameter } from "../avatarconfig";
 
 defineProps<{
   parameters: (Parameter & { name: string })[];
