@@ -5,9 +5,9 @@ import { Parameter } from "./avatarconfig";
 import { Client } from "./client";
 
 import ParameterReceiver from "./components/ParameterReceiver.vue";
-import ParameterSender from "./components/ParameterSender.vue";
 import ConnectForm from "./components/ConnectForm.vue";
 import ParameterSenderAuto from "./components/ParameterSenderAuto.vue";
+import ParameterSenderManual from "./components/ParameterSenderManual.vue";
 import ClientList from "./components/ClientList.vue";
 
 const routes = ["Auto detect parameters", "Manually add parameters"] as const;
@@ -72,7 +72,7 @@ async function onsend(param: Parameter, value: string) {
           <ParameterSenderAuto @onsend="onsend" />
         </div>
         <div v-if="route === 'Manually add parameters'">
-          <ParameterSender @onsend="onsend" />
+          <ParameterSenderManual @onsend="onsend" />
         </div>
       </div>
       <div class="col-lg-6">
