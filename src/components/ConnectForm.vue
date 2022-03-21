@@ -13,15 +13,13 @@ const emit = defineEmits<{
 const user = ref("");
 const room = ref("");
 
-const serverAddr = ref("");
-const serverAddrDefault = "wss://";
+const serverAddr = "wss://osc-ws.herokuapp.com";
 
 async function load() {
   const res = await invoke("load_config");
   const config = JSON.parse(res as string);
   user.value = config.user ?? "";
   room.value = config.room ?? "";
-  serverAddr.value = config.serverAddr ?? "";
 }
 
 async function save() {
@@ -29,7 +27,6 @@ async function save() {
   const config = JSON.parse(res as string);
   config.user = user.value;
   config.room = room.value;
-  config.serverAddr = serverAddr.value;
   const json = JSON.stringify(config, null, 2);
   await invoke("save_config", { config: json });
 }
@@ -43,8 +40,7 @@ function connect() {
   try {
     if (!user.value) throw new Error("おなまえがないよ～");
     if (!room.value) throw new Error("あいことばがないよ～");
-    if (!serverAddr.value) throw new Error("さーばーあどれすがないよ");
-    const url = new URL(serverAddr.value);
+    const url = new URL(serverAddr);
     const params = new URLSearchParams({ user: user.value, room: room.value });
     url.search = params.toString();
     sock = new WebSocket(url);
@@ -105,36 +101,19 @@ defineExpose({
 <template>
   <div class="row">
     <div class="col-sm-8 m-auto mt-2">
-      <div class="row">
-        <div class="col-6 pe-1">
-          <input
-            v-model="user"
-            class="form-control"
-            :disabled="state !== 'CLOSED'"
-            placeholder="おなまえ"
-          />
-        </div>
-        <div class="col-6 ps-1">
-          <input
-            v-model="room"
-            class="form-control"
-            :disabled="state !== 'CLOSED'"
-            placeholder="あいことば"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-sm-8 m-auto mt-2">
       <label class="visually-hidden">Server Address</label>
       <div class="input-group">
         <input
-          v-model="serverAddr"
+          v-model="user"
           class="form-control"
-          @keydown="onkeydown"
           :disabled="state !== 'CLOSED'"
-          :placeholder="serverAddrDefault"
+          placeholder="おなまえ"
+        />
+        <input
+          v-model="room"
+          class="form-control"
+          :disabled="state !== 'CLOSED'"
+          placeholder="あいことば"
         />
         <button
           v-if="state === 'CLOSED'"
