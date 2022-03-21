@@ -32,7 +32,9 @@ const avatarconfig = ref<AvatarParameterConfig | null>(null);
 const parameters = ref<ParameterSync[]>([]);
 
 watchEffect(() => {
-  const synced = parameters.value.filter((p) => p.synced);
+  const synced = parameters.value
+    .filter((p) => p.synced)
+    .map(({ name, address, type }) => ({ name, address, type }));
   emit("onchange", synced);
 });
 
