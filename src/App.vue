@@ -97,6 +97,7 @@ watchEffect(async () => {
     typ: "Bool",
   });
 });
+const history = ref<[string, Date][]>([]);
 async function send() {
   const immediate = true;
   await invoke("send_osc_message", {
@@ -104,6 +105,7 @@ async function send() {
     value: text.value,
     typ: `String ${immediate}`,
   });
+  history.value.push([text.value, new Date()]);
   text.value = "";
 }
 </script>
@@ -125,6 +127,25 @@ async function send() {
           />
           <button @click="send" class="btn btn-outline-secondary">Send</button>
         </div>
+        <div class="chat-history">
+          <ul>
+            <li v-if="typing">
+              <div class="message my-message">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </li>
+            <li v-for="[chat, date] in [...history].reverse()">
+              <div class="message my-message">
+                {{ chat }}
+              </div>
+              <div class="message message-date">
+                {{ date.toLocaleString() }}
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </main>
@@ -133,4 +154,74 @@ async function send() {
 <style>
 @import "bootstrap";
 @import "bootstrap-icons";
+
+.chat-history ul {
+  padding: 0px;
+}
+
+.chat-history ul li {
+  list-style: none;
+  margin-top: 26px;
+}
+.chat-history .message {
+  color: #444;
+  padding: 12px 20px;
+  line-height: 16px;
+  font-size: 16px;
+  border-radius: 7px;
+  display: inline-block;
+  position: relative;
+}
+
+.chat-history .my-message {
+  background: #efefef;
+}
+
+.chat-history .my-message:after {
+  bottom: 100%;
+  left: 30px;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+  border-bottom-color: #efefef;
+  border-width: 10px;
+  margin-left: -10px;
+}
+
+.chat-history .message-date {
+  font-size: 13px;
+  color: #bcbcbc;
+}
+
+.dot {
+  margin: 3px 1px;
+  height: 5px;
+  width: 5px;
+  border-radius: 100%;
+  display: inline-block;
+  background-color: #b4b5b9;
+  animation: 1.2s typing-dot ease-in-out infinite;
+}
+
+.dot:nth-of-type(2) {
+  animation-delay: 0.15s;
+}
+
+.dot:nth-of-type(3) {
+  animation-delay: 0.25s;
+}
+
+@keyframes typing-dot {
+  15% {
+    transform: translateY(-35%);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
 </style>
