@@ -70,15 +70,18 @@ fn send_osc_message(
     connection: State<'_, SendConnection>,
 ) {
     println!("{} {} {}", addr, value, typ);
-    let arg = match typ.as_str() {
-        "Int" => OscType::Int(value.parse().unwrap()),
-        "Bool" => OscType::Bool(value.parse().unwrap()),
-        "Float" => OscType::Float(value.parse().unwrap()),
+    let args = match typ.as_str() {
+        "Int" => vec![OscType::Int(value.parse().unwrap())],
+        "Bool" => vec![OscType::Bool(value.parse().unwrap())],
+        "Float" => vec![OscType::Float(value.parse().unwrap())],
+        "String" => vec![OscType::String(value)],
+        "String true" => vec![OscType::String(value), OscType::Bool(true)],
+        "String false" => vec![OscType::String(value), OscType::Bool(false)],
         _ => panic!("Type not implemented"),
     };
     let packet = OscPacket::Message(OscMessage {
         addr: addr,
-        args: vec![arg],
+        args: args,
     });
     connection
         .0

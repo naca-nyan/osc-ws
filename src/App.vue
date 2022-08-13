@@ -82,48 +82,55 @@ async function onsend(param: Parameter, value: string) {
     await invoke("send_osc_message", body.param);
   }
 }
+
+const text = ref("");
+async function input(e: Event) {
+  if (!(e.target instanceof HTMLInputElement)) return;
+  const t = e.target.value;
+  text.value = t;
+  const typing = t.length > 0;
+  console.log(typing);
+  await invoke("send_osc_message", {
+    addr: "/chatbox/typing",
+    value: typing.toString(),
+    typ: "Bool",
+  });
+}
+async function send() {
+  const immediate = true;
+  await invoke("send_osc_message", {
+    addr: "/chatbox/input",
+    value: text.value,
+    typ: `String ${immediate}`,
+  });
+  text.value = "";
+  await invoke("send_osc_message", {
+    addr: "/chatbox/typing",
+    value: false,
+    typ: "Bool",
+  });
+}
 </script>
 <template>
   <header class="container-fluid p-3 mb-3 bg-primary text-white text-center">
-    <h1>Parameter Sync for VRChat</h1>
-    <ConnectForm @onmessage="onmessage" @onclose="onclose" ref="ws" />
+    <h1>ChatBox for VRChat</h1>
   </header>
   <main class="container">
     <div class="row">
       <div class="col-lg-6">
-        <ul class="nav nav-tabs mb-3">
-          <li v-for="{ id, user } in clients" class="nav-item">
-            <a
-              @click="route = id"
-              :class="route === id ? 'nav-link active' : 'nav-link'"
-            >
-              <i class="bi bi-circle-fill text-success pe-1"></i>
-              <span>{{ user }}</span>
-            </a>
-          </li>
-          <li v-for="r in routes" class="nav-item">
-            <a
-              @click="route = r"
-              :class="r === route ? 'nav-link active' : 'nav-link'"
-            >
-              {{ r }}
-            </a>
-          </li>
-        </ul>
-        <div v-if="typeof route === 'number'">
-          <ParameterSender :parameters="parameters" @onsend="onsend" />
-        </div>
-        <div v-if="route === 'Sync Settings'">
-          <ParameterSyncSettings
-            :syncedNames="syncedNames"
-            @onsend="onsend"
-            @onchange="onSyncedParameterChange"
-            @onunmounted="(s) => (syncedNames = s)"
+        <div class="input-group mb-3">
+          <input
+            :value="text"
+            @input="input"
+            @keydown.enter="send"
+            type="text"
+            class="form-control"
+            placeholder="chat message"
+            aria-label="chat message"
+            aria-describedby="button-addon2"
           />
+          <button @click="send" class="btn btn-outline-secondary">Send</button>
         </div>
-      </div>
-      <div class="col-lg-6">
-        <ParameterReceiver />
       </div>
     </div>
   </main>
