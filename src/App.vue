@@ -100,12 +100,14 @@ watchEffect(async () => {
 const history = ref<[string, Date][]>([]);
 async function send() {
   const immediate = true;
+  const limit = 144;
+  const message = text.value.substring(0, limit);
   await invoke("send_osc_message", {
     addr: "/chatbox/input",
-    value: text.value,
+    value: message,
     typ: `String ${immediate}`,
   });
-  history.value.push([text.value, new Date()]);
+  history.value.push([message, new Date()]);
   text.value = "";
 }
 </script>
