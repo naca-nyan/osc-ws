@@ -27,7 +27,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
-          files: src-tauri/target/release/osc-ws.exe
+          files: src-tauri/target/release/chatbox-vrc.exe
   debug-build:
     runs-on: windows-latest
     steps:
@@ -47,9 +47,9 @@ jobs:
           toolchain: stable
       - run: yarn --frozen-lockfile
       - run: yarn tauri build --debug
-      - run: mv src-tauri/target/debug/osc-ws.exe src-tauri/target/debug/osc-ws.debug.exe
+      - run: mv src-tauri/target/debug/chatbox-vrc.exe src-tauri/target/debug/chatbox-vrc.debug.exe
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
-          files: src-tauri/target/debug/osc-ws.debug.exe
+          files: src-tauri/target/debug/chatbox-vrc.debug.exe

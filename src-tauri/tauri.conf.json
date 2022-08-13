@@ -1,6 +1,6 @@
 {
   "package": {
-    "productName": "osc-ws",
+    "productName": "chatbox-vrc",
     "version": "0.1.0"
   },
   "build": {
@@ -54,7 +54,7 @@
     },
     "windows": [
       {
-        "title": "Parameter Sync for VRChat",
+        "title": "ChatBox for VRChat",
         "width": 800,
         "height": 600,
         "resizable": true,

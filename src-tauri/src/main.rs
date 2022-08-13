@@ -133,7 +133,7 @@ fn get_state(key: String, connection: State<'_, ReceiveConnection>) -> Option<(S
 }
 
 fn get_config_path(app: tauri::AppHandle) -> std::path::PathBuf {
-    let filename = "osc-ws.config.json";
+    let filename = "chatbox-vrc.config.json";
     let resource_dir = app
         .path_resolver()
         .resource_dir()

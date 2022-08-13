@@ -13,7 +13,7 @@ const emit = defineEmits<{
 const user = ref("");
 const room = ref("");
 
-const serverAddr = "wss://osc-ws.herokuapp.com";
+const serverAddr = "wss://chatbox-vrc.herokuapp.com";
 
 async function load() {
   const res = await invoke("load_config");
