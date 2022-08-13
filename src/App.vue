@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/tauri";
-import { ref, computed, reactive } from "vue";
+import { ref, computed, reactive, watchEffect } from "vue";
 import { Parameter, ParameterInfo } from "./avatarconfig";
 import { Client } from "./client";
 
@@ -84,18 +84,19 @@ async function onsend(param: Parameter, value: string) {
 }
 
 const text = ref("");
-async function input(e: Event) {
-  if (!(e.target instanceof HTMLInputElement)) return;
-  const t = e.target.value;
-  text.value = t;
-  const typing = t.length > 0;
-  console.log(typing);
+const typing = ref(false);
+watchEffect(() => {
+  const t = text.value.length > 0;
+  if (typing.value != t) typing.value = t;
+});
+watchEffect(async () => {
+  const value = typing.value;
   await invoke("send_osc_message", {
     addr: "/chatbox/typing",
-    value: typing.toString(),
+    value: value.toString(),
     typ: "Bool",
   });
-}
+});
 async function send() {
   const immediate = true;
   await invoke("send_osc_message", {
@@ -104,11 +105,6 @@ async function send() {
     typ: `String ${immediate}`,
   });
   text.value = "";
-  await invoke("send_osc_message", {
-    addr: "/chatbox/typing",
-    value: false,
-    typ: "Bool",
-  });
 }
 </script>
 <template>
@@ -120,14 +116,12 @@ async function send() {
       <div class="col-lg-6">
         <div class="input-group mb-3">
           <input
-            :value="text"
-            @input="input"
+            v-model="text"
             @keydown.enter="send"
             type="text"
             class="form-control"
             placeholder="chat message"
             aria-label="chat message"
-            aria-describedby="button-addon2"
           />
           <button @click="send" class="btn btn-outline-secondary">Send</button>
         </div>
